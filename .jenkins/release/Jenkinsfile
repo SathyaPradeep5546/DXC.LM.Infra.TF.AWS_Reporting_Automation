@@ -1,0 +1,27 @@
+node {
+  checkout scm
+}
+pipeline {
+  agent any
+  options {
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '15'))
+    timestamps()
+    timeout(time: 20, unit: 'MINUTES')
+  }
+
+  stages {
+    stage('Trigger Release Creation'){
+      steps {
+          script {
+            withCredentials ([usernamePassword(credentialsId: 'lm-jenkins-bot', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASSWORD')]){
+              build job:'Terraform/terraform-release-pipeline' , parameters:[
+                  string(name: "MODULE_GIT_URL", value: "${env.GIT_URL}")
+                  //, string(name: "TEAMS_WEBHOOK_URL", value: "<webhook-url>")
+                ]
+            } // end with credentials
+          } // end script
+      } // end steps
+    } // end stage
+  } // end stages
+} // end pipeline

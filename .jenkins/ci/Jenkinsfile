@@ -1,0 +1,27 @@
+node {
+  checkout scm
+}
+pipeline {
+  agent any
+  options {
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '15'))
+    timestamps()
+    timeout(time: 20, unit: 'MINUTES')
+  }
+
+  stages {
+     stage('Trigger CI'){
+        steps {
+            script {
+              withCredentials ([usernamePassword(credentialsId: 'lm-jenkins-bot', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASSWORD')]){
+                build job:'Terraform/terraform-ci-pipeline' , parameters:[
+                   string(name: "MODULE_GIT_URL", value: "${env.GIT_URL}"),
+                   string(name: "BRANCH", value: "${env.CHANGE_BRANCH}")
+                ]
+              } // end with credentials
+            } // end script
+        } // end steps
+      } // end stage
+   } // end stages
+} // end pipeline
